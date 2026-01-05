@@ -1,0 +1,70 @@
+[
+    {
+        "level": 1,
+        "name": "The Beginning",
+        "description": "Dodge the falling debris.",
+        "goal_score": 100,
+        "spawn_rate": 0.1,
+        "patterns": [
+            "vertical"
+        ]
+    },
+    {
+        "level": 2,
+        "name": "Crossfire",
+        "description": "Bullets are coming from the sides!",
+        "goal_score": 250,
+        "spawn_rate": 0.15,
+        "patterns": [
+            "vertical",
+            "horizontal"
+        ]
+    },
+    {
+        "level": 3,
+        "name": "The Storm",
+        "description": "Watch out for the diagonal bursts.",
+        "goal_score": 500,
+        "spawn_rate": 0.2,
+        "patterns": [
+            "vertical",
+            "diagonal"
+        ]
+    },
+    {
+        "level": 4,
+        "name": "Circle of Death",
+        "description": "Explosive patterns everywhere.",
+        "goal_score": 750,
+        "spawn_rate": 0.25,
+        "patterns": [
+            "vertical",
+            "circle"
+        ]
+    },
+    {
+        "level": 5,
+        "name": "The Spiral",
+        "description": "Vortex of death.",
+        "goal_score": 1000,
+        "spawn_rate": 0.3,
+        "patterns": [
+            "vertical",
+            "spiral"
+        ]
+    },
+    {
+        "level": 6,
+        "name": "Final Frontier",
+        "description": "Everything together.",
+        "goal_score": 1500,
+        "spawn_rate": 0.4,
+        "patterns": [
+            "vertical",
+            "horizontal",
+            "diagonal",
+            "circle",
+            "spiral"
+        ]
+    }
+]
