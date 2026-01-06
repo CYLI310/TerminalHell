@@ -54,11 +54,15 @@ class GameEngine:
         
         # Game objects
         self.px, self.py = 0, 0
-        self.bullets = [] # List of [x, y, dx, dy]
+        self.bullets = [] # Enemy bullets: [x, y, dx, dy]
+        self.player_bullets = [] # Player bullets: [x, y, dx, dy]
+        self.enemies = [] # Enemies: [x, y, dx, dy, hp]
         self.score = 0
         self.lives = 3
         self.iframe = 0
         self.frame = 0
+        self.last_shot_frame = 0
+        self.shot_cooldown = 15 # Slow attack (approx 2 shots per second at 30fps)
 
     def load_save(self):
         default = {"high_score": 0, "unlocked_level": 1, "difficulty": "Normal"}
@@ -84,10 +88,13 @@ class GameEngine:
         self.px = self.width // 2
         self.py = self.height - 3
         self.bullets = []
+        self.player_bullets = []
+        self.enemies = []
         self.score = 0
         self.lives = 3
         self.iframe = 0
         self.frame = 0
+        self.last_shot_frame = 0
         self.state = "PLAYING"
 
     def get_input(self):
@@ -139,7 +146,7 @@ class GameEngine:
         for i, opt in enumerate(opts):
             self.put_str(grid, self.width//2 - 12, self.height//2 + i*2, BOLD + WHITE + opt + RESET)
         
-        controls = "WASD/Arrows to Move | SPACE/1 to Select | Q to Quit"
+        controls = "WASD/Arrows: Move | Z/K/SPACE: Attack | Q: Quit"
         self.put_str(grid, (self.width - len(controls)) // 2, self.height - 3, CYAN + controls + RESET)
 
     def draw_game(self, grid):
@@ -159,10 +166,20 @@ class GameEngine:
         if 0 <= px_pos < self.width - 2:
             self.put_str(grid, px_pos, int(self.py), char)
         
-        # Draw Bullets (Bold dots)
+        # Draw Enemy Bullets (Bold dots)
         for b in self.bullets:
             if 0 <= b[1] < self.height and 0 <= b[0] < self.width:
                 self.put_str(grid, int(b[0]), int(b[1]), BOLD + RED + "·" + RESET)
+
+        # Draw Player Bullets (Vertical bars)
+        for b in self.player_bullets:
+            if 0 <= b[1] < self.height and 0 <= b[0] < self.width:
+                self.put_str(grid, int(b[0]), int(b[1]), BOLD + YELLOW + "¦" + RESET)
+
+        # Draw Enemies (Small ships)
+        for e in self.enemies:
+            if 0 <= e[1] < self.height and 0 <= e[0] < self.width:
+                self.put_str(grid, int(e[0])-1, int(e[1]), BOLD + GREEN + "<#>" + RESET)
 
         # Draw HUD at the bottom
         self.draw_hud(grid, level_info)
@@ -262,9 +279,57 @@ class GameEngine:
                 if b in self.bullets: self.bullets.remove(b)
             elif b[1] >= self.height or b[1] < 0 or b[0] < 0 or b[0] >= self.width:
                 if b in self.bullets: self.bullets.remove(b)
-                self.score += 1
+                # No longer adding score for dodging bullets to focus on enemy elimination
+                
+        # Update Player Bullets
+        for b in self.player_bullets[:]:
+            b[1] += b[3] # y += dy
+            b[0] += b[2] # x += dx
+            
+            # Check collision with enemies
+            hit = False
+            for e in self.enemies[:]:
+                if abs(b[0] - e[0]) < 2 and abs(b[1] - e[1]) < 1:
+                    e[4] -= 1 # Reduce HP
+                    hit = True
+                    if e[4] <= 0:
+                        if e in self.enemies:
+                            self.enemies.remove(e)
+                            self.score += 20
+                    break
+            
+            # Check collision with boss (if active)
+            if not hit and level_info['level'] >= 5:
+                if abs(b[0] - self.enemy_x) < 4 and abs(b[1] - self.enemy_y) < 2:
+                    self.score += 5
+                    hit = True
+            
+            if hit or b[1] < 0 or b[1] >= self.height or b[0] < 0 or b[0] >= self.width:
+                if b in self.player_bullets: self.player_bullets.remove(b)
+
+        # Update Enemies
+        if random.random() < 0.05: # Spawn enemy occasionally
+            ex = random.randint(2, self.width - 3)
+            self.enemies.append([ex, 0, random.uniform(-0.1, 0.1), 0.3, 1])
+
+        for e in self.enemies[:]:
+            e[1] += e[3] # y += dy
+            e[0] += e[2] # x += dx
+            
+            # Collision with player
+            if abs(e[0] - self.px) < 1.8 and abs(e[1] - self.py) < 0.8:
+                if self.iframe <= 0:
+                    self.lives -= 1
+                    self.iframe = 45
+                    if self.lives <= 0:
+                        self.state = "GAMEOVER"
+                if e in self.enemies: self.enemies.remove(e)
+            elif e[1] >= self.height:
+                if e in self.enemies: self.enemies.remove(e)
+                # Removed penalty for letting enemies pass
                 
         if self.iframe > 0: self.iframe -= 1
+        self.score = max(0, self.score) # Ensure score is never negative
         
         if self.score >= level_info['goal_score']:
             self.save_data['unlocked_level'] = max(self.save_data['unlocked_level'], self.current_level + 1)
@@ -315,6 +380,14 @@ def main():
                 elif key in ['s', 'down']: engine.py = min(engine.height - 2, engine.py + 2)
                 elif key in ['a', 'left']: engine.px = max(1, engine.px - 4)
                 elif key in ['d', 'right']: engine.px = min(engine.width - 2, engine.px + 4)
+                
+                # Attack logic
+                if key in ['z', 'k', ' ']:
+                    if engine.frame - engine.last_shot_frame >= engine.shot_cooldown:
+                        # Fire a spread of 3 bullets (slowly)
+                        engine.player_bullets.append([engine.px, engine.py - 1, 0, -1.0])
+                        engine.last_shot_frame = engine.frame
+                
                 engine.update_game()
                 
             elif engine.state in ["GAMEOVER", "VICTORY"]:
