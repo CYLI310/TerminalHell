@@ -1,6 +1,11 @@
 # Terminal Velocity
 
-A fast-paced, terminal-based bullet hell game where you must dodge waves of incoming projectiles to survive.
+A fast-paced, terminal-based bullet hell game where you must dodge waves of incoming projectiles to survive. Fully runs on python.
+
+## Installation
+
+- **Clone**: Clone or download the python and json files
+- **Run**: ```Windows: python game.py  MacOS: python3 game.py```
 
 ## How to Play
 
