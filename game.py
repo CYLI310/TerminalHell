@@ -174,7 +174,7 @@ class GameEngine:
         # Draw Player Bullets (Vertical bars)
         for b in self.player_bullets:
             if 0 <= b[1] < self.height and 0 <= b[0] < self.width:
-                self.put_str(grid, int(b[0]), int(b[1]), BOLD + YELLOW + "¦" + RESET)
+                self.put_str(grid, int(b[0]), int(b[1]), BOLD + YELLOW + "^" + RESET)
 
         # Draw Enemies (Small ships)
         for e in self.enemies:
@@ -279,7 +279,7 @@ class GameEngine:
                 if b in self.bullets: self.bullets.remove(b)
             elif b[1] >= self.height or b[1] < 0 or b[0] < 0 or b[0] >= self.width:
                 if b in self.bullets: self.bullets.remove(b)
-                # No longer adding score for dodging bullets to focus on enemy elimination
+                self.score += 1 # Points for dodging bullets
                 
         # Update Player Bullets
         for b in self.player_bullets[:]:
@@ -308,7 +308,7 @@ class GameEngine:
                 if b in self.player_bullets: self.player_bullets.remove(b)
 
         # Update Enemies
-        if random.random() < 0.05: # Spawn enemy occasionally
+        if random.random() < 0.08: # Spawn enemy slightly more often
             ex = random.randint(2, self.width - 3)
             self.enemies.append([ex, 0, random.uniform(-0.1, 0.1), 0.3, 1])
 
@@ -396,6 +396,7 @@ def main():
             # 3. Draw
             # Manual grid rendering to avoid flickering
             w, h = get_terminal_size()
+            engine.width, engine.height = w, h
             grid = [[" " for _ in range(w)] for _ in range(h)]
             
             if engine.state == "MENU":
