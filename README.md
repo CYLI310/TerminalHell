@@ -1,6 +1,6 @@
 # Terminal Hell
 
-A fast-paced, terminal-based bullet hell game where you must dodge waves of incoming projectiles to survive. Fully runs on python.
+A fast-paced, terminal-based bullet hell game where you must dodge waves of incoming projectiles to survive. Fully runs on python. Nothing serious, just a fun little project.
 
 ## Installation
 
